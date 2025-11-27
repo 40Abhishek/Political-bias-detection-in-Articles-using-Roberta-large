@@ -1,0 +1,181 @@
+My project focuses on building an automated system to detect the political bias of news articles using state-of-the-art transformer models. The first challenge was obtaining article-level bias labels, because popular sources like MBFC provide bias ratings only for news outlets, not for individual articles. I initially tried combining GDELT articles with MBFC labels, but realized this would assign the same bias to every article from a given publisher, which is incorrect. To solve this issue, I shifted to Ground News, which not only groups the same story from multiple publishers, but also provides the source-level leanings (Left, Center, Right). Although Ground News still labels the publisher, not the article itself, it was the best data source for my time constraints. I scraped approximately 7,000 news articles using Selenium while overcoming several scraping issues such as search box caching, blocked requests, missing labels, and Selenium interference when running multiple instances. I fixed these by using separate Edge profiles, ports, and better scraping logic.
+
+After scraping, I cleaned the dataset by removing NaN rows, HTML junk, short paragraphs, repeated ads, tracking links, and “follow us” elements. I also solved CSV parsing issues caused by characters like “@”. I mapped all textual labels to numeric labels (Left=0, Center=1, Right=2). Once the dataset was ready, I fine-tuned transformer-based models using the HuggingFace Trainer API.
+
+The first model I trained was RoBERTa-base, which achieved around 64.7% accuracy and 0.647 macro F1, along with a stable confusion matrix. Then I trained a much larger model, RoBERTa-large, utilizing Colab GPU fully with gradient accumulation, mixed precision (fp16), and gradient checkpointing to prevent out-of-memory errors. The RoBERTa-large model improved performance significantly, reaching 67.5% accuracy and 0.675 macro F1, with higher stability across all three classes.
+
+To ensure the model generalizes well, I also implemented 5-fold cross-validation, training five separate models on different data splits. The folds showed consistent performance between 65%–69%, confirming dataset reliability and stable training. I finally exported the best-performing model and built an offline inference script. This script includes article chunking (512-token windows) so even long articles are analyzed fully. The final tool gives a fast bias prediction (Left/Center/Right) along with class probabilities.
+
+Overall, my journey involved solving real-world data challenges, scraping, cleaning, deep learning model training, GPU optimization, evaluation techniques, and offline deployment. This project demonstrates both engineering skills and machine learning understanding.
+
+⭐ FULL PROJECT EXPLANATION (POINTS FORM)
+
+(Perfect for slides.)
+
+1. Problem Definition
+
+Goal: Classify political bias of news articles as Left, Center, or Right.
+
+Challenge: Hard to find article-level bias labels.
+
+MBFC labels publishers, not individual articles → not suitable.
+
+2. Data Collection (Scraping)
+
+Switched to Ground News because:
+
+It groups multiple publishers covering the same story.
+
+Shows publisher bias (Left/Center/Right).
+
+Scraped ~7000 articles using Selenium + MS Edge.
+
+Major challenges handled:
+
+Search box caching issues.
+
+Blocked requests.
+
+Missing bias labels.
+
+Selenium interference with multiple browser instances → fixed using separate Edge profiles + ports.
+
+3. Data Cleaning & Preprocessing
+
+Removed:
+
+NaN articles
+
+Newsletter popups, ads, “follow us” text
+
+Tracking links and junk HTML
+
+Articles below minimum word limit
+
+Cleaned CSV formatting issues caused by “@”.
+
+Mapped textual bias → numerical labels:
+
+Left → 0
+
+Center → 1
+
+Right → 2
+
+Final dataset: approx 7000 clean labeled articles.
+
+4. Model 1: RoBERTa-Base Training
+
+Used HuggingFace Trainer API.
+
+Tokenized text to 512 tokens.
+
+Used fp16, AdamW, and 3 epochs.
+
+Results (3 epochs):
+
+Training Loss: 0.7523
+
+Validation Loss: 0.8215
+
+Accuracy: 0.6476
+
+Macro F1: 0.6473
+
+Confusion Matrix:
+
+[[305, 102, 46],
+ [ 81, 259, 58],
+ [ 85,  66,241]]
+
+
+Conclusion: Good baseline, but needed improvement.
+
+5. Model 2: RoBERTa-Large Training
+
+Needed advanced GPU optimization:
+
+Gradient accumulation
+
+fp16 mixed precision
+
+Gradient checkpointing
+
+Batch size adjustments
+
+Colab GPU used to the fullest.
+
+Results (3 epochs):
+
+Training Loss: 0.7312
+
+Validation Loss: 0.7486
+
+Accuracy: 0.6757
+
+Macro F1: 0.6754
+
+Confusion Matrix:
+
+[[322, 91, 40],
+ [ 84, 259,55],
+ [ 69, 64,259]]
+
+
+Conclusion: Clear improvement over RoBERTa-base.
+
+6. Cross-Validation (K-Fold)
+
+Implemented 5-fold cross-validation.
+
+Fold accuracies ranged ~60–69%.
+
+Shows model is stable and not overfitting to one split.
+
+Ensures overall robustness.
+
+7. Model Deployment (Offline)
+
+Exported trained model locally.
+
+Built a Python script for offline bias detection:
+
+Loads model + tokenizer from saved directory.
+
+Splits long articles into multiple chunks (512 tokens each).
+
+Averages logits across chunks.
+
+Outputs:
+
+Predicted bias (Left/Center/Right)
+
+Class probabilities
+
+No internet required. Fast CPU inference.
+
+8. Final Achievements
+
+A complete end-to-end NLP system:
+✔ Web scraping
+✔ Data cleaning
+✔ Model training (base + large)
+✔ GPU optimization
+✔ K-fold validation
+✔ Confusion matrices and F1 analysis
+✔ Saving + loading model offline
+✔ Fast inference tool
+
+Achieved strong performance: 67.5% accuracy on RoBERTa-large.
+
+Demonstrated understanding of:
+
+Transformers
+
+GPU memory optimization
+
+Real-world data handling
+
+Evaluation metrics
+
+Deployment
